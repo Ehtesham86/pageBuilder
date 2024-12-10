@@ -1,9 +1,9 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import JoditEditor from 'jodit-react'
 import { X, AlignCenter, AlignLeft, AlignRight, Plus, Trash2 } from 'lucide-react'
-import { Block } from './types/block';
+import { Block } from './types/block'
+import JoditEditor from 'jodit-react';
 
 interface StylePanelProps {
   block: Block
@@ -31,40 +31,6 @@ export default function StylePanel({ block, updateBlock, closePanel }: StylePane
   const [campaignName, setCampaignName] = useState('vlogger')
   const [redirectUrl, setRedirectUrl] = useState('your_redirectURL')
 
-  const config = {
-    readonly: false,
-    height: 300,
-    buttons: [
-      'bold', 'italic', 'underline', 'strikethrough',
-      '|',
-      'align', 'outdent', 'indent',
-      '|',
-      'ul', 'ol',
-      '|',
-      'font', 'fontsize', 'brush', 'paragraph',
-      '|',
-      'image', 'table', 'link',
-      '|',
-      'hr', 'eraser', 'copyformat',
-      '|',
-      'symbol', 'fullsize', 'print'
-    ],
-    uploader: { insertImageAsBase64URI: true },
-    showXPathInStatusbar: false,
-    showCharsCounter: false,
-    showWordsCounter: false,
-    toolbarAdaptive: false,
-  }
-
-  const handleContentUpdate = (newContent: string) => {
-    if (block.type === 'button') {
-      const buttonText = newContent.match(/>([^<]+)</)?.[1] || '';
-      const updatedContent = `<button>${buttonText}</button>`;
-      updateBlock(block.id, updatedContent, styles);
-    } else {
-      updateBlock(block.id, newContent, styles);
-    }
-  }
 
   const handleHtmlUpdate = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setHtmlContent(e.target.value)
@@ -594,7 +560,6 @@ export default function StylePanel({ block, updateBlock, closePanel }: StylePane
         ref={editorRef}
         value={htmlContent}
         config={{
-          ...config,
           buttons: ['bold', 'italic', 'underline', '|', 'ul', 'ol', '|', 'link', 'image'],
         }}
         onBlur={(newContent) => {
@@ -647,7 +612,6 @@ export default function StylePanel({ block, updateBlock, closePanel }: StylePane
         ref={editorRef}
         value={htmlContent}
         config={{
-          ...config,
           buttons: ['link', 'unlink', '|', 'bold', 'italic', 'underline', '|', 'fontsize', 'brush'],
         }}
         onBlur={(newContent) => {
@@ -713,7 +677,6 @@ export default function StylePanel({ block, updateBlock, closePanel }: StylePane
         ref={editorRef}
         value={htmlContent}
         config={{
-          ...config,
           buttons: ['link', 'unlink', '|', 'bold', 'italic', 'underline'],
         }}
         onBlur={(newContent) => {
@@ -723,6 +686,171 @@ export default function StylePanel({ block, updateBlock, closePanel }: StylePane
       />
     </div>
   )
+
+  const renderFormStyles = (mediaQuery: string = 'default') => {
+    const [formFields, setFormFields] = useState(formConfig.fields);
+    const config = {
+      buttons: ['bold', 'italic', 'underline', '|', 'ul', 'ol', '|', 'link', 'image'],
+    };
+
+    const addField = () => {
+      setFormFields([...formFields, { type: 'text', name: '', label: '' }]);
+    };
+
+    const removeField = (index: number) => {
+      setFormFields(formFields.filter((_, i) => i !== index));
+    };
+
+    const updateField = (index: number, key: string, value: string) => {
+      const updatedFields = [...formFields];
+      updatedFields[index] = { ...updatedFields[index], [key]: value };
+      setFormFields(updatedFields);
+    };
+
+    const updateFormContent = () => {
+      const formContent = `
+        <form action="https://munkpin.onrender.com/api/submit/${userId}" method="POST" enctype="application/x-www-form-urlencoded" class="space-y-4">
+          <input type="hidden" name="campaign" value="${campaignName}" />
+          <input type="hidden" name="redirectUrl" value="${redirectUrl}" />
+          ${formFields.map(field => `
+            <div>
+              <label for="${field.name}" class="block text-sm font-medium text-gray-700">${field.label}</label>
+              ${field.type === 'textarea' 
+                ? `<textarea id="${field.name}" name="${field.name}" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"></textarea>`
+                : `<input type="${field.type}" id="${field.name}" name="${field.name}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" />`
+              }
+            </div>
+          `).join('')}
+          <div>
+            <button type="submit" style="background-color: ${styles.default.submitButtonBgColor || '#4F46E5'}; color: ${styles.default.submitButtonTextColor || '#FFFFFF'};" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+          ${styles.default.submitButtonText || 'Submit'}
+        </button>
+      </div>
+    </form>
+  `;
+      updateBlock(block.id, formContent, styles);
+    };
+
+    return (
+      <div className="space-y-4">
+        {renderStyleInputs(mediaQuery)}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">User ID</label>
+          <input
+            type="text"
+            value={userId}
+            onChange={(e) => setUserId(e.target.value)}
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Campaign Name</label>
+          <input
+            type="text"
+            value={campaignName}
+            onChange={(e) => setCampaignName(e.target.value)}
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Redirect URL</label>
+          <input
+            type="text"
+            value={redirectUrl}
+            onChange={(e) => setRedirectUrl(e.target.value)}
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm"
+          />
+        </div>
+        <div>
+          <h4 className="text-lg font-medium mb-2">Form Fields</h4>
+          {formFields.map((field, index) => (
+            <div key={index} className="mb-4 p-4 border border-gray-200 rounded-md">
+              <div className="mb-2">
+                <label className="block text-sm font-medium text-gray-700">Field Type</label>
+                <select
+                  value={field.type}
+                  onChange={(e) => updateField(index, 'type', e.target.value)}
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm"
+                >
+                  <option value="text">Text</option>
+                  <option value="email">Email</option>
+                  <option value="textarea">Textarea</option>
+                </select>
+              </div>
+              <div className="mb-2">
+                <label className="block text-sm font-medium text-gray-700">Field Name</label>
+                <input
+                  type="text"
+                  value={field.name}
+                  onChange={(e) => updateField(index, 'name', e.target.value)}
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm"
+                />
+              </div>
+              <div className="mb-2">
+                <label className="block text-sm font-medium text-gray-700">Field Label</label>
+                <input
+                  type="text"
+                  value={field.label}
+                  onChange={(e) => updateField(index, 'label', e.target.value)}
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm"
+                />
+              </div>
+              <button
+                onClick={() => removeField(index)}
+                className="mt-2 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+              >
+                Remove Field
+              </button>
+            </div>
+          ))}
+          <button
+            onClick={addField}
+            className="mt-2 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+          >
+            Add Field
+          </button>
+        </div>
+        <div>
+          <h4 className="text-lg font-medium mb-2">Submit Button</h4>
+          <div className="space-y-2">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Button Text</label>
+              <input
+                type="text"
+                value={styles[mediaQuery]?.submitButtonText || 'Submit'}
+                onChange={(e) => handleStyleChange('submitButtonText', e.target.value, mediaQuery)}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Button Background Color</label>
+              <input
+                type="color"
+                value={styles[mediaQuery]?.submitButtonBgColor || '#4F46E5'}
+                onChange={(e) => handleStyleChange('submitButtonBgColor', e.target.value, mediaQuery)}
+                className="mt-1 block w-full h-8"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Button Text Color</label>
+              <input
+                type="color"
+                value={styles[mediaQuery]?.submitButtonTextColor || '#FFFFFF'}
+                onChange={(e) => handleStyleChange('submitButtonTextColor', e.target.value, mediaQuery)}
+                className="mt-1 block w-full h-8"
+              />
+            </div>
+          </div>
+        </div>
+        <button
+          className="mt-4 bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600"
+          onClick={updateFormContent}
+        >
+          Update Form
+        </button>
+      </div>
+    );
+  };
 
   const updateFormSettings = () => {
     const updatedContent = htmlContent.replace(
@@ -738,56 +866,6 @@ export default function StylePanel({ block, updateBlock, closePanel }: StylePane
     updateBlock(block.id, updatedContent, styles);
   }
 
-  const renderFormStyles = (mediaQuery: string = 'default') => (
-    <div className="space-y-4">
-      {renderStyleInputs(mediaQuery)}
-      <div>
-        <label className="block text-sm font-medium text-gray-700">User ID</label>
-        <input
-          type="text"
-          value={userId}
-          onChange={(e) => setUserId(e.target.value)}
-          className="mt-1 block w-full borderborder-gray-300 rounded-md shadow-sm"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Campaign Name</label>
-        <input
-          type="text"
-          value={campaignName}
-          onChange={(e) => setCampaignName(e.target.value)}
-          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Redirect URL</label>
-        <input
-          type="text"
-          value={redirectUrl}
-          onChange={(e) => setRedirectUrl(e.target.value)}
-          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm"
-        />
-      </div>
-      <button
-        className="mt-2 bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600"
-        onClick={updateFormSettings}
-      >
-        Update Form Settings
-      </button>
-      <JoditEditor
-        ref={editorRef}
-        value={htmlContent}
-        config={{
-          ...config,
-          buttons: ['bold', 'italic', 'underline', '|', 'ul', 'ol', '|', 'link', 'unlink'],
-        }}
-        onBlur={(newContent) => {
-          setHtmlContent(newContent);
-          updateBlock(block.id, newContent, styles);
-        }}
-      />
-    </div>
-  )
 
   return (
     <div className="w-80 bg-white border-l border-gray-200 p-4 overflow-y-auto">
@@ -808,7 +886,7 @@ export default function StylePanel({ block, updateBlock, closePanel }: StylePane
         {block.type === 'card' && renderCardStyles()}
         {block.type === 'social' && renderSocialStyles()}
         {block.type === 'form' && renderFormStyles()}
-        {block.type === 'html' ? (
+        {block.type === 'html' && (
           <>
             <textarea
               className="w-full h-64 p-2 border border-gray-300 rounded"
@@ -823,15 +901,13 @@ export default function StylePanel({ block, updateBlock, closePanel }: StylePane
               Apply Changes
             </button>
           </>
-        ) : (block.type !== 'video' && block.type !== 'image' && block.type !== 'button' && block.type !== 'link' && block.type !== 'form') && (
+        )}
+        {(block.type === 'header' || block.type === 'paragraph') && (
           <JoditEditor
             ref={editorRef}
             value={block.content}
             config={{
-              ...config,
-              buttons: block.type === 'social'
-                ? ['link', 'unlink', '|', 'bold', 'italic', 'underline']
-                : config.buttons,
+              buttons: block.type === 'header' ? ['bold', 'italic', 'underline', '|', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'] : ['bold', 'italic', 'underline', '|', 'ul', 'ol', '|', 'link', 'image'],
             }}
             onBlur={(newContent) => updateBlock(block.id, newContent, styles)}
           />

@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion'
 import { useState } from 'react'
 import BlockComponent from './block-component'
-import { Block } from '../types/block'
+import { Block } from './types/block'
 
 interface EditorProps {
   blocks: Block[]

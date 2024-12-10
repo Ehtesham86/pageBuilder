@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { ArrowUpDown, Paintbrush, Copy, Trash2, FlagIcon as BorderAll, BetweenHorizontalEndIcon as BorderNone } from 'lucide-react'
-import { Block } from '../types/block'
+import { Block } from './types/block'
 
 interface BlockComponentProps {
   block: Block

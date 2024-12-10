@@ -1,9 +1,13 @@
-import PageBuilder from './components/dropbuilder/PageBuilder'
+import PageBuilder from './components/pagebuilder/page-builder'
+// import Dasb01 from './components/Dasb01';
+// import SignUp from './components/App-Components/SignUp'
 
 export default function Home() {
   return (
    <div>
-    <PageBuilder/>
+  {/* <Dasb01/> */}
+  <PageBuilder/>
+  {/* <SignUp/> */}
    </div>
   )
 }
